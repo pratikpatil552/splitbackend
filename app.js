@@ -23,6 +23,8 @@ app.get("/test",(req,res)=>{
 app.post("/user/signup",(req,res)=>{
     console.log(req.body);
     res.json({status:"success"});
+    console.log("Gaurav");
+    res.send("success");
 })
 
 
