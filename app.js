@@ -12,10 +12,17 @@ mongoose
     .connect("mongodb://127.0.0.1:27017/split")
     .then((e)=>{console.log("mongo db connected")});
 
+// middlewares used here
+app.use(express.urlencoded())
 
 // it is the test route
 app.get("/test",(req,res)=>{
-    res.send("success");
+    res.json({status:"success"});
+})
+
+app.post("/user/signup",(req,res)=>{
+    console.log(req.body);
+    res.json({status:"success"});
 })
 
 
