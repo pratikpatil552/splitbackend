@@ -15,6 +15,7 @@ mongoose
 
 // it is the test route
 app.get("/test",(req,res)=>{
+    console.log("Gaurav");
     res.send("success");
 })
 
