@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const userRoute = require("./routes/user");
+const cors = require("cors");
 
 const PORT = process.env.PORT || 8000;
 
@@ -14,7 +15,12 @@ mongoose
     .then((e)=>{console.log("mongo db connected")});
 
 // middlewares used here
-app.use(express.urlencoded({extended:false}));
+app.use(express.json());
+app.use(cors({
+    credentials : true,
+    origin : "http://localhost:3000",
+}));
+
 //app.use(cookieParser());
 
 // it is the test route
