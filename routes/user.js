@@ -60,8 +60,28 @@ router.post("/signup/otp",async (req,res)=>{
 
 
 router.post("/signup",async (req,res)=>{
-    const {name,number,email,password} = req.body;
-    
+    const {name,number,password,email,otp} = req.body;
+    const otpdoc = await Otp.findOne({email});
+    if(otpdoc){
+        if(otpdoc.otp === otp){
+            try{
+                const userdoc = await User.create({
+                    name,
+                    number,
+                    email,
+                    password,
+                    verified:true,
+                })
+                return res.json({status:"successfull registeration"});
+            }
+            catch(error){
+                return res.json({status:"email or mobile number is already used"});
+            }
+
+        }
+        else return res.json({status:"type the correct otp"});
+    }
+    else return res.json({status:"generate the otp first",error:"no otp is generated"});
 })
 
 module.exports = router;
