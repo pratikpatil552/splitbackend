@@ -10,6 +10,11 @@ const userSchema = new Schema({
         required:true,
         unique:true,
     },
+    email:{
+        type:String,
+        required:true,
+        unique:true,
+    },
     password:{
         type:String,
         required:true,
@@ -18,7 +23,7 @@ const userSchema = new Schema({
         type:Boolean,
         default:false,
     }
-    
+
 },{timestamps:true});
 
 const User = model("user",userSchema);

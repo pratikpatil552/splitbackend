@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const userRoute = require("./routes/user");
 
 const PORT = process.env.PORT || 8000;
 
@@ -13,19 +14,15 @@ mongoose
     .then((e)=>{console.log("mongo db connected")});
 
 // middlewares used here
-app.use(express.urlencoded())
+app.use(express.urlencoded({extended:false}));
+//app.use(cookieParser());
 
 // it is the test route
 app.get("/test",(req,res)=>{
     res.json({status:"success"});
 })
 
-app.post("/user/signup",(req,res)=>{
-    console.log(req.body);
-    res.json({status:"success"});
-    console.log("Gaurav");
-    res.send("success");
-})
+app.use("/user",userRoute);
 
 
 app.listen(PORT,()=>{console.log("server started successfully")});
