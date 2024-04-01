@@ -2,6 +2,7 @@ const {Router, application} = require("express");
 const User = require("../models/user");
 const Otp = require("../models/otp");
 var nodemailer = require('nodemailer');
+const bcrypt = require("bcryptjs");
 
 const router = new Router();
 
@@ -65,14 +66,16 @@ router.post("/signup",async (req,res)=>{
     if(otpdoc){
         if(otpdoc.otp === otp){
             try{
+                const saltround = 10;
+                const hashPassword = await bcrypt.hash(password,saltround);
                 const userdoc = await User.create({
                     name,
                     number,
                     email,
-                    password,
+                    password:hashPassword,
                     verified:true,
                 })
-                return res.json({status:"successfull registeration"});
+                return res.json({status:"successfull registeration",token : await userdoc.generateToken()});
             }
             catch(error){
                 return res.json({status:"email or mobile number is already used"});
@@ -82,6 +85,26 @@ router.post("/signup",async (req,res)=>{
         else return res.json({status:"type the correct otp"});
     }
     else return res.json({status:"generate the otp first",error:"no otp is generated"});
+})
+
+
+// user login path
+router.post("/signin",async (req,res)=>{
+    try{
+        const {number,password} = req.body;
+        const userDoc = await User.findOne({number});
+        if(!userDoc){
+            return res.json({status:"invalid"});
+        }
+        const user = await bcrypt.compare(password,userDoc.password);
+        if(user){
+            return res.json({msg:"200",token : await userDoc.generateToken()})
+        }
+        else return res.json({status:"invalid"});
+    }
+    catch(error){
+        console.log("error");
+    }
 })
 
 module.exports = router;

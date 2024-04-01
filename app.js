@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const userRoute = require("./routes/user");
 const cors = require("cors");
+const errorMiddleware = require("./middlewares/errormiddleware");
 
 const PORT = process.env.PORT || 8000;
 
@@ -20,6 +21,7 @@ app.use(cors({
     credentials : true,
     origin : "http://localhost:3000",
 }));
+app.use(errorMiddleware);
 
 //app.use(cookieParser());
 
