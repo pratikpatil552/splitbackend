@@ -27,13 +27,13 @@ const userSchema = new Schema({
 
 },{timestamps:true});
 
-// dot env 
+
 const jwtsecret = "andyp3"
 
 userSchema.methods.generateToken = async function (){
     try{
         return jwt.sign({
-            userId : this._id.toString(),
+            name:this.name,
             number : this.number,
             email : this.email,
             },
@@ -47,6 +47,7 @@ userSchema.methods.generateToken = async function (){
         console.log(error);
     }
 }
+
 
 
 const User = model("user",userSchema);

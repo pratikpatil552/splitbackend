@@ -3,6 +3,8 @@ const User = require("../models/user");
 const Otp = require("../models/otp");
 var nodemailer = require('nodemailer');
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 
 const router = new Router();
 
@@ -75,7 +77,7 @@ router.post("/signup",async (req,res)=>{
                     password:hashPassword,
                     verified:true,
                 })
-                return res.json({status:"successfull registeration",token : await userdoc.generateToken()});
+                return res.cookie("token",await userdoc.generateToken()).json({status:"successfull registeration"});
             }
             catch(error){
                 return res.json({status:"email or mobile number is already used"});
@@ -90,21 +92,42 @@ router.post("/signup",async (req,res)=>{
 
 // user login path
 router.post("/signin",async (req,res)=>{
+    console.log("vamos signin");
     try{
         const {number,password} = req.body;
+        console.log("her we come");
         const userDoc = await User.findOne({number});
+        console.log(userDoc);
         if(!userDoc){
             return res.json({status:"invalid"});
         }
         const user = await bcrypt.compare(password,userDoc.password);
         if(user){
-            return res.json({msg:"200",token : await userDoc.generateToken()})
+            return res.cookie("token",await userDoc.generateToken()).json({status:"logged in successfully",name:userDoc.name, number:userDoc.number, email:userDoc.email});
         }
         else return res.json({status:"invalid"});
     }
     catch(error){
         console.log("error");
     }
+})
+
+
+// router for keeping user logged in using profile route
+router.get("/profile",async (req,res)=>{
+    console.log("vamos");
+    console.log(req.body);
+    const token = req.cookies?.token;
+    console.log(token);
+    if(token){
+        const payload = jwt.verify(token,"andyp3");
+        console.log("current payload", payload);
+        if(!payload) return res.json({status:"no user found logged in"})
+        const {name,number,email} = payload;
+        console.log("sending payload",payload);
+        return res.json({name,number,email});
+    }
+    else return res.json({status:"no user logged in found"});
 })
 
 module.exports = router;

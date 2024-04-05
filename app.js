@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const userRoute = require("./routes/user");
 const cors = require("cors");
-const errorMiddleware = require("./middlewares/errormiddleware");
+const cookieParser = require("cookie-parser")
 
 const PORT = process.env.PORT || 8000;
 
@@ -21,9 +21,8 @@ app.use(cors({
     credentials : true,
     origin : "http://localhost:3000",
 }));
-app.use(errorMiddleware);
 
-//app.use(cookieParser());
+app.use(cookieParser());
 
 // it is the test route
 app.get("/test",(req,res)=>{
