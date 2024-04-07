@@ -12,7 +12,6 @@ const otpSchema = new Schema({
     },
 },{timestamps:true});
 
-otpSchema.index({ expireAt: 1 }, { expireAfterSeconds: 300}); 
 
 const Otp = model("otp",otpSchema);
 module.exports = Otp;

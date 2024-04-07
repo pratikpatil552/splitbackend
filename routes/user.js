@@ -51,7 +51,6 @@ router.post("/signup/otp",async (req,res)=>{
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log("Email sent successfully");
     } 
     catch (error) {
         await Otp.deleteOne({email});
@@ -64,12 +63,22 @@ router.post("/signup/otp",async (req,res)=>{
 
 router.post("/signup",async (req,res)=>{
     const {name,number,password,email,otp} = req.body;
+    console.log(req.body);
     const otpdoc = await Otp.findOne({email});
     if(otpdoc){
         if(otpdoc.otp === otp){
             try{
                 const saltround = 10;
                 const hashPassword = await bcrypt.hash(password,saltround);
+                console.log(hashPassword);
+                console.log("number : ",await User.findOne({number}));
+                console.log("email : ",await User.findOne({email}) )
+                if(await User.findOne({number})){
+                    return res.json({status:"duplicate number"});
+                }
+                if(await User.findOne({email})){
+                    return res.json({status:"duplicate email"});
+                }
                 const userdoc = await User.create({
                     name,
                     number,
@@ -80,6 +89,7 @@ router.post("/signup",async (req,res)=>{
                 return res.cookie("token",await userdoc.generateToken()).json({status:"successfull registeration"});
             }
             catch(error){
+                console.log(error);
                 return res.json({status:"email or mobile number is already used"});
             }
 
@@ -92,12 +102,9 @@ router.post("/signup",async (req,res)=>{
 
 // user login path
 router.post("/signin",async (req,res)=>{
-    console.log("vamos signin");
     try{
         const {number,password} = req.body;
-        console.log("her we come");
         const userDoc = await User.findOne({number});
-        console.log(userDoc);
         if(!userDoc){
             return res.json({status:"invalid"});
         }
@@ -115,16 +122,11 @@ router.post("/signin",async (req,res)=>{
 
 // router for keeping user logged in using profile route
 router.get("/profile",async (req,res)=>{
-    console.log("vamos");
-    console.log(req.body);
     const token = req.cookies?.token;
-    console.log(token);
     if(token){
         const payload = jwt.verify(token,"andyp3");
-        console.log("current payload", payload);
         if(!payload) return res.json({status:"no user found logged in"})
         const {name,number,email} = payload;
-        console.log("sending payload",payload);
         return res.json({name,number,email});
     }
     else return res.json({status:"no user logged in found"});
