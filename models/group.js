@@ -37,7 +37,10 @@ const groupSchema = new Schema({
         type:Schema.Types.ObjectId,
         ref:"user",
     }],
-    
+    status:{
+        type:String,
+        default:"pending",
+    },
     transactions:[transactionSchema],
 
 },{timestamps:true});

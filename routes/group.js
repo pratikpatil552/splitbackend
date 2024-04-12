@@ -2,14 +2,6 @@ const {Router, application} = require("express");
 const User = require("../models/user");
 const Group = require("../models/group");
 
-
-/*
-/group/number/ -> post will create a new blog -> done and dusted
-/group/number/groupid/pep -> will add the members
-/group/number/groupid/trans -> will add the transactions
-*/
-
-
 const router = new Router();
 
 
@@ -58,6 +50,8 @@ router.post("/:number/:groupid/pep", async (req,res)=>{
     else return res.json({status:"You are not the owner"});
 })
 
+
+// adding new transaction
 router.post("/:number/:groupid/tran",async (req,res)=>{
     const {to, from, amount} = req.body;
     const memberself = await User.findOne({number:req.params.number});
@@ -76,7 +70,7 @@ router.post("/:number/:groupid/tran",async (req,res)=>{
                 addedby:memberself._id
             })
             await groupself.save();
-            return res.json({status:"transaction successfully added"});
+            return res.json({status:"success"});
         }
         else return res.json({status:"number does not exist in the group"});
     }
@@ -84,7 +78,25 @@ router.post("/:number/:groupid/tran",async (req,res)=>{
 })
 
 
-// adding transaction is started
+
+// getting a group for which number is owner
+router.get("/:number/own",async (req,res)=>{
+    const ownerself = await User.findOne({number:req.params.number});
+    const groups = await Group.find({owner:ownerself._id});
+    return res.json(groups);
+})
+
+// getting a group for which number is memeber
+router.get("/:number/memb",async (req,res)=>{
+    const memberself = await User.findOne({number:req.params.number});
+    const groups = await Group.find({members:{$in:[memberself._id]},owner:{$ne:memberself._id}});
+    return res.json(groups);
+})
+
+router.get("/:id", async (req,res)=>{
+    const groups = await Group.findOne({_id:req.params.id}).populate("members").populate("owner").populate({path:"transactions",populate:{path:'to'}}).populate({path:"transactions",populate:{path:'from'}}).populate({path:"transactions",populate:{path:'addedby'}});
+    return res.json(groups);
+})
 
 
 module.exports = router;
