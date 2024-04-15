@@ -5,6 +5,38 @@ const Group = require("../models/group");
 const router = new Router();
 
 
+// dfs helping function 
+async function dfs(i, n, temp) {
+    if (i === n) {
+        return [];
+    }
+    if (temp[i].first === 0) {
+        return dfs(i + 1, n, temp);
+    }
+    
+    let ans = [];
+
+    for (let j = i + 1; j < n; j++) {
+        let backup = temp[j].first;
+        if (temp[i].first * temp[j].first < 0) {
+            temp[j].first += temp[i].first;
+            let tempans = await dfs(i + 1, n, temp);
+            if (temp[i].first < 0) {
+                tempans.push([{ from: temp[i].second, to: temp[j].second }, -temp[i].first]);
+            } else {
+                tempans.push([{ from: temp[j].second, to: temp[i].second }, temp[i].first]);
+            }
+            if (tempans.length < ans.length || ans.length === 0) {
+                ans = tempans;
+            }
+            temp[j].first = backup;
+        }
+    }
+    return ans;
+}
+
+
+
 // creating a new group
 router.post("/:number",async (req,res)=>{
     const {name} = req.body;
@@ -98,5 +130,35 @@ router.get("/:id", async (req,res)=>{
     return res.json(groups);
 })
 
+
+// the actual simplify algorithm
+router.get("/:groupid/cal",async (req,res)=>{
+    const groupself = await Group.findOne({_id:req.params.groupid}).populate({path:"transactions",populate:{path:'to'}}).populate({path:"transactions",populate:{path:'from'}});
+    const data = groupself.transactions;
+    //return res.json(data);
+    let arr = [];
+    for (let i = 0; i < data.length; i++) {
+        arr.push([{ from: data[i].from.number, to: data[i].to.number }, data[i].amount]);
+    }
+    //return res.json(arr);
+    let mp = {};
+    for (let it of arr) {
+        mp[it[0].from] = (mp[it[0].from] || 0) - it[1];
+        mp[it[0].to] = (mp[it[0].to] || 0) + it[1];
+    }
+    //return res.json(mp);
+
+    let temp = [];
+Object.entries(mp).forEach(([key, value]) => {
+    if (value !== 0) {
+        temp.push({ first: value, second: key });
+    }
+}); 
+    //return res.json(temp);
+
+    let n = temp.length;
+    const result = await dfs(0, n, temp);
+    return res.json(result);
+})
 
 module.exports = router;
