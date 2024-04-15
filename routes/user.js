@@ -63,16 +63,12 @@ router.post("/signup/otp",async (req,res)=>{
 
 router.post("/signup",async (req,res)=>{
     const {name,number,password,email,otp} = req.body;
-    console.log(req.body);
     const otpdoc = await Otp.findOne({email});
     if(otpdoc){
         if(otpdoc.otp === otp){
             try{
                 const saltround = 10;
                 const hashPassword = await bcrypt.hash(password,saltround);
-                console.log(hashPassword);
-                console.log("number : ",await User.findOne({number}));
-                console.log("email : ",await User.findOne({email}) )
                 if(await User.findOne({number})){
                     return res.json({status:"duplicate number"});
                 }

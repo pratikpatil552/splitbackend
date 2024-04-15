@@ -92,8 +92,6 @@ router.post("/:number/:groupid/tran",async (req,res)=>{
     if(await groupself.members.includes(memberself._id)){
         const topep = await User.findOne({number:to});
         const frompep = await User.findOne({number:from});
-        console.log("to :",topep);
-        console.log("from :",frompep);
         if(topep && frompep){
             await groupself.transactions.push({
                 to:topep._id,
