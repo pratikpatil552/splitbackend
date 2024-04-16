@@ -1,6 +1,7 @@
 const {Router, application} = require("express");
 const User = require("../models/user");
 const Group = require("../models/group");
+const Result = require("../models/result");
 
 const router = new Router();
 
@@ -129,6 +130,19 @@ router.get("/:id", async (req,res)=>{
 })
 
 
+router.get("/:id/result", async (req,res)=>{
+    try{
+        const result = await Result.findOne({group : req.params.id}).populate({path:"optimaltransactions",populate:{path:'to'}}).populate({path:"optimaltransactions",populate:{path:'from'}});
+        if(result) return res.json(result);
+        else return res.json({status:"this will be not required"});
+    }
+    catch(error){
+        console.log(error);
+    }
+
+})
+
+
 // the actual simplify algorithm
 router.get("/:groupid/cal",async (req,res)=>{
     const groupself = await Group.findOne({_id:req.params.groupid}).populate({path:"transactions",populate:{path:'to'}}).populate({path:"transactions",populate:{path:'from'}});
@@ -136,7 +150,7 @@ router.get("/:groupid/cal",async (req,res)=>{
     //return res.json(data);
     let arr = [];
     for (let i = 0; i < data.length; i++) {
-        arr.push([{ from: data[i].from.number, to: data[i].to.number }, data[i].amount]);
+        arr.push([{ from: data[i].from._id, to: data[i].to._id }, data[i].amount]);
     }
     //return res.json(arr);
     let mp = {};
@@ -147,16 +161,53 @@ router.get("/:groupid/cal",async (req,res)=>{
     //return res.json(mp);
 
     let temp = [];
-Object.entries(mp).forEach(([key, value]) => {
-    if (value !== 0) {
-        temp.push({ first: value, second: key });
-    }
-}); 
-    //return res.json(temp);
+    Object.entries(mp).forEach(([key, value]) => {
+        if (value !== 0) {
+            temp.push({ first: value, second: key });
+        }
+    }); 
+
 
     let n = temp.length;
     const result = await dfs(0, n, temp);
-    return res.json(result);
+
+    try{
+        const justfind = await Result.findOne({group : req.params.groupid});
+        if(justfind){
+            for (let i = 0; i<result.length; i++){
+                await justfind.optimaltransactions.push({
+                    to:result[i][0].to,
+                    from:result[i][0].from,
+                    amount:result[i][1],
+                })
+                await justfind.save();
+            }
+            groupself.status = "completed";
+            await groupself.save();
+            return res.json({status:"successfully created"});
+        }
+
+        const newResult = await Result.create({
+            group:req.params.groupid,
+            optimaltransactions:[],
+            
+        })
+        for (let i = 0; i<result.length; i++){
+            await newResult.optimaltransactions.push({
+                to:result[i][0].to,
+                from:result[i][0].from,
+                amount:result[i][1],
+            })
+            await newResult.save();
+        }
+        groupself.status = "completed";
+        await groupself.save();
+        return res.json({status:"successfully created"});
+    }
+    catch(error){
+        console.log(error);
+        return res.json({status:"problem while creating a group"});
+    }    
 })
 
 module.exports = router;
